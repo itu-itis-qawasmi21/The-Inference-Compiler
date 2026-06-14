@@ -1,0 +1,654 @@
+=== TEST SUITE STARTED: 2026-01-17 12:57:19.940323 ===
+
+
+============================================================
+TEST: MLP | Baseline
+TIME: 2026-01-17 12:57:19.942338
+CMD: C:\Python311\python.exe main.py --dataset mnist --model_type mlp --epochs 1
+============================================================
+2026-01-17 12:57:21.522381: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-17 12:57:29.021248: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-17 12:57:55.736109: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+--- [Setup] Loading MNIST Data ---
+>>> [Setup] No path provided. Defaulting to 'external/mnist_mlp_model.h5'
+--- [Setup] Loading Teacher Model from: external/mnist_mlp_model.h5 ---
+  > Model loaded successfully.
+
+>>> Skipping Distillation (Using Teacher as Base)
+
+>>> Skipping Pruning/Quantization (Compilation Only)
+--- [IR] Exploding Model into Atomic Operations ---
+--- [IR] Explosion Complete. Total Nodes: 6 ---
+--- [Optimizer] Running Graph Passes ---
+  > [DCE] Removed 0 dead nodes.
+  > [CSE] Merged 0 redundant operations.
+  [Debug: Linear Collapse] Scanning 6 nodes...
+    - dense_2: Skip collapse. Outputs count is 0 (expected 1).
+  > [Linear Collapse] Merged 0 linear chains.
+  > [Algebraic Simplification] Scanned for identity ops.
+  [Debug: Fusion] Starting pass. OpTypes detected: {'Dropout', 'Dense', 'Input'}
+    - dense_2 (Dense): Cannot fuse. Output branches to: []
+  > [Operator Fusion] Fused 0 operations.
+  > [DCE] Removed 0 dead nodes.
+--- [Compiler] Generating C++ Code to model_mnist_baseline.cpp ---
+  > Code Generation Complete. (269871 lines)
+
+>>> Final Evaluation
+
+==================================================
+    FINAL PERFORMANCE EVALUATION REPORT
+==================================================
+
+[1] ACCURACY METRICS
+  Original Model:   98.27%
+  Optimized Model:  98.27%
+  Accuracy Drop:    0.00%  [PASS]
+
+[2] SPARSITY METRICS
+  Total Params:      269,322
+  Active Params:     269,322
+  Global Sparsity:  0.00%
+
+[3] COMPUTATIONAL COST (Approx. FLOPs)
+  Dense FLOPs:       537,600
+  Sparse FLOPs:      538,122
+  Theoretical Speedup: 1.00x
+
+[4] PYTHON INFERENCE LATENCY (Batch 32)
+  Original:          7.37 ms
+  Optimized:         7.27 ms
+  (Note: Real speedup will be higher in generated C++)
+
+[5] LAYER-WISE BREAKDOWN
+  Layer Name           | Shape           | Sparsity   | Unique Vals
+-----------------------------------------------------------------
+  dense                | (784, 256)      | 0.0%      | 200424
+  dense_1              | (256, 256)      | 0.0%      | 65513
+  dense_2              | (256, 10)       | 0.0%      | 2560
+
+==================================================
+OVERALL VERDICT: NEEDS TUNING [WARNING]
+==================================================
+
+
+[STATUS] PASS (Code: 0)
+
+
+============================================================
+TEST: MLP | Our RKD + Prune + Quant
+TIME: 2026-01-17 12:58:01.878138
+CMD: C:\Python311\python.exe main.py --dataset mnist --model_type mlp --epochs 1 --distill ours --prune --quantize
+============================================================
+2026-01-17 12:58:02.222805: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-17 12:58:05.205484: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-17 12:58:14.666674: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: SSE3 SSE4.1 SSE4.2 AVX AVX2 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+WARNING:absl:Compiled the loaded model, but the compiled metrics have yet to be built. `model.compile_metrics` will be empty until you train or evaluate the model.
+C:\Python311\Lib\site-packages\keras\src\layers\core\input_layer.py:27: UserWarning: Argument `input_shape` is deprecated. Use `shape` instead.
+  warnings.warn(
+C:\Python311\Lib\site-packages\keras\src\backend\tensorflow\nn.py:675: UserWarning: "`categorical_crossentropy` received `from_logits=True`, but the `output` argument was produced by a Softmax activation and thus does not represent logits. Was this intended?
+  output, from_logits = _get_logits(
+C:\Python311\Lib\site-packages\keras\src\backend\tensorflow\trainer.py:646: UserWarning: `model.compiled_metrics()` is deprecated. Instead, use e.g.:
+```
+for metric in self.metrics:
+    metric.update_state(y, y_pred)
+```
+
+  return self._compiled_metrics_update_state(
+--- [Setup] Loading MNIST Data ---
+>>> [Setup] No path provided. Defaulting to 'external/mnist_mlp_model.h5'
+--- [Setup] Loading Teacher Model from: external/mnist_mlp_model.h5 ---
+  > Model loaded successfully.
+
+>>> Step 1: Distillation (ours)
+
+[1m  1/938[0m [37m====================[0m [1m37:52[0m 2s/step - accuracy: 0.1250 - distill_loss: 0.0059 - loss: 0.1000 - rkd_loss: 0.0981 - student_loss: 2.3343 - total_loss: 2.1996
+[1m  5/938[0m [37m====================[0m [1m14s[0m 15ms/step - accuracy: 0.2146 - distill_loss: 0.0056 - loss: 0.1000 - rkd_loss: 0.0878 - student_loss: 2.1271 - total_loss: 2.0028
+[1m  8/938[0m [37m====================[0m [1m14s[0m 16ms/step - accuracy: 0.2778 - distill_loss: 0.0053 - loss: 0.1000 - rkd_loss: 0.0866 - student_loss: 1.9676 - total_loss: 1.8579
+[1m 15/938[0m [37m====================[0m [1m10s[0m 12ms/step - accuracy: 0.3910 - distill_loss: 0.0045 - loss: 0.1000 - rkd_loss: 0.0872 - student_loss: 1.6222 - total_loss: 1.5476
+[1m 25/938[0m [37m====================[0m [1m8s[0m 9ms/step - accuracy: 0.4846 - distill_loss: 0.0036 - loss: 0.1000 - rkd_loss: 0.0754 - student_loss: 1.2790 - total_loss: 1.2268  
+[1m 34/938[0m [37m====================[0m [1m7s[0m 8ms/step - accuracy: 0.5380 - distill_loss: 0.0030 - loss: 0.1000 - rkd_loss: 0.0653 - student_loss: 1.0877 - total_loss: 1.0445
+[1m 43/938[0m [37m====================[0m [1m6s[0m 8ms/step - accuracy: 0.5768 - distill_loss: 0.0027 - loss: 0.1000 - rkd_loss: 0.0576 - student_loss: 0.9581 - total_loss: 0.9202
+[1m 52/938[0m [32m=[0m[37m===================[0m [1m6s[0m 7ms/step - accuracy: 0.6072 - distill_loss: 0.0024 - loss: 0.1000 - rkd_loss: 0.0522 - student_loss: 0.8663 - total_loss: 0.8321
+[1m 61/938[0m [32m=[0m[37m===================[0m [1m6s[0m 7ms/step - accuracy: 0.6318 - distill_loss: 0.0022 - loss: 0.1000 - rkd_loss: 0.0474 - student_loss: 0.7808 - total_loss: 0.7503
+[1m 70/938[0m [32m=[0m[37m===================[0m [1m5s[0m 7ms/step - accuracy: 0.6520 - distill_loss: 0.0020 - loss: 0.1000 - rkd_loss: 0.0450 - student_loss: 0.7433 - total_loss: 0.7142
+[1m 79/938[0m [32m=[0m[37m===================[0m [1m5s[0m 7ms/step - accuracy: 0.6687 - distill_loss: 0.0019 - loss: 0.1000 - rkd_loss: 0.0424 - student_loss: 0.7027 - total_loss: 0.6749
+[1m 88/938[0m [32m=[0m[37m===================[0m [1m5s[0m 7ms/step - accuracy: 0.6830 - distill_loss: 0.0018 - loss: 0.1000 - rkd_loss: 0.0401 - student_loss: 0.6633 - total_loss: 0.6373
+[1m 98/938[0m [32m==[0m[37m==================[0m [1m5s[0m 7ms/step - accuracy: 0.6968 - distill_loss: 0.0017 - loss: 0.1000 - rkd_loss: 0.0381 - student_loss: 0.6308 - total_loss: 0.6061
+[1m107/938[0m [32m==[0m[37m==================[0m [1m5s[0m 6ms/step - accuracy: 0.7077 - distill_loss: 0.0017 - loss: 0.1000 - rkd_loss: 0.0368 - student_loss: 0.6056 - total_loss: 0.5819
+[1m116/938[0m [32m==[0m[37m==================[0m [1m5s[0m 6ms/step - accuracy: 0.7174 - distill_loss: 0.0016 - loss: 0.1000 - rkd_loss: 0.0352 - student_loss: 0.5800 - total_loss: 0.5574
+[1m125/938[0m [32m==[0m[37m==================[0m [1m5s[0m 6ms/step - accuracy: 0.7261 - distill_loss: 0.0015 - loss: 0.1000 - rkd_loss: 0.0341 - student_loss: 0.5605 - total_loss: 0.5387
+[1m133/938[0m [32m==[0m[37m==================[0m [1m5s[0m 6ms/step - accuracy: 0.7330 - distill_loss: 0.0015 - loss: 0.1000 - rkd_loss: 0.0333 - student_loss: 0.5497 - total_loss: 0.5282
+[1m142/938[0m [32m===[0m[37m=================[0m [1m5s[0m 6ms/step - accuracy: 0.7402 - distill_loss: 0.0014 - loss: 0.1000 - rkd_loss: 0.0322 - student_loss: 0.5302 - total_loss: 0.5096
+[1m151/938[0m [32m===[0m[37m=================[0m [1m4s[0m 6ms/step - accuracy: 0.7468 - distill_loss: 0.0014 - loss: 0.1000 - rkd_loss: 0.0312 - student_loss: 0.5122 - total_loss: 0.4923
+[1m160/938[0m [32m===[0m[37m=================[0m [1m4s[0m 6ms/step - accuracy: 0.7528 - distill_loss: 0.0014 - loss: 0.1000 - rkd_loss: 0.0305 - student_loss: 0.5024 - total_loss: 0.4828
+[1m169/938[0m [32m===[0m[37m=================[0m [1m4s[0m 6ms/step - accuracy: 0.7583 - distill_loss: 0.0013 - loss: 0.1000 - rkd_loss: 0.0298 - student_loss: 0.4920 - total_loss: 0.4727
+[1m179/938[0m [32m===[0m[37m=================[0m [1m4s[0m 6ms/step - accuracy: 0.7640 - distill_loss: 0.0013 - loss: 0.1000 - rkd_loss: 0.0290 - student_loss: 0.4792 - total_loss: 0.4604
+[1m187/938[0m [32m===[0m[37m=================[0m [1m4s[0m 6ms/step - accuracy: 0.7683 - distill_loss: 0.0013 - loss: 0.1000 - rkd_loss: 0.0283 - student_loss: 0.4673 - total_loss: 0.4490
+[1m196/938[0m [32m====[0m[37m================[0m [1m4s[0m 6ms/step - accuracy: 0.7728 - distill_loss: 0.0012 - loss: 0.1000 - rkd_loss: 0.0276 - student_loss: 0.4578 - total_loss: 0.4398
+[1m205/938[0m [32m====[0m[37m================[0m [1m4s[0m 6ms/step - accuracy: 0.7770 - distill_loss: 0.0012 - loss: 0.1000 - rkd_loss: 0.0271 - student_loss: 0.4508 - total_loss: 0.4330
+[1m214/938[0m [32m====[0m[37m================[0m [1m4s[0m 6ms/step - accuracy: 0.7810 - distill_loss: 0.0012 - loss: 0.1000 - rkd_loss: 0.0266 - student_loss: 0.4425 - total_loss: 0.4250
+[1m223/938[0m [32m====[0m[37m================[0m [1m4s[0m 6ms/step - accuracy: 0.7847 - distill_loss: 0.0012 - loss: 0.1000 - rkd_loss: 0.0262 - student_loss: 0.4363 - total_loss: 0.4190
+[1m233/938[0m [32m====[0m[37m================[0m [1m4s[0m 6ms/step - accuracy: 0.7887 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0256 - student_loss: 0.4281 - total_loss: 0.4110
+[1m242/938[0m [32m=====[0m[37m===============[0m [1m4s[0m 6ms/step - accuracy: 0.7920 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0252 - student_loss: 0.4223 - total_loss: 0.4054
+[1m251/938[0m [32m=====[0m[37m===============[0m [1m4s[0m 6ms/step - accuracy: 0.7951 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0248 - student_loss: 0.4156 - total_loss: 0.3990
+[1m260/938[0m [32m=====[0m[37m===============[0m [1m4s[0m 6ms/step - accuracy: 0.7981 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0245 - student_loss: 0.4104 - total_loss: 0.3940
+[1m269/938[0m [32m=====[0m[37m===============[0m [1m4s[0m 6ms/step - accuracy: 0.8009 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0241 - student_loss: 0.4040 - total_loss: 0.3878
+[1m278/938[0m [32m=====[0m[37m===============[0m [1m3s[0m 6ms/step - accuracy: 0.8036 - distill_loss: 0.0011 - loss: 0.1000 - rkd_loss: 0.0239 - student_loss: 0.4004 - total_loss: 0.3844
+[1m286/938[0m [32m======[0m[37m==============[0m [1m3s[0m 6ms/step - accuracy: 0.8059 - distill_loss: 0.0010 - loss: 0.1000 - rkd_loss: 0.0235 - student_loss: 0.3949 - total_loss: 0.3791
+[1m295/938[0m [32m======[0m[37m==============[0m [1m3s[0m 6ms/step - accuracy: 0.8084 - distill_loss: 0.0010 - loss: 0.1000 - rkd_loss: 0.0232 - student_loss: 0.3899 - total_loss: 0.3742
+[1m304/938[0m [32m======[0m[37m==============[0m [1m3s[0m 6ms/step - accuracy: 0.8107 - distill_loss: 0.0010 - loss: 0.1000 - rkd_loss: 0.0229 - student_loss: 0.3848 - total_loss: 0.3694
+[1m313/938[0m [32m======[0m[37m==============[0m [1m3s[0m 6ms/step - accuracy: 0.8130 - distill_loss: 0.0010 - loss: 0.1000 - rkd_loss: 0.0226 - student_loss: 0.3795 - total_loss: 0.3642
+[1m322/938[0m [32m======[0m[37m==============[0m [1m3s[0m 6ms/step - accuracy: 0.8152 - distill_loss: 9.9593e-04 - loss: 0.1000 - rkd_loss: 0.0224 - student_loss: 0.3772 - total_loss: 0.3620
+[1m331/938[0m [32m=======[0m[37m=============[0m [1m3s[0m 6ms/step - accuracy: 0.8173 - distill_loss: 9.8610e-04 - loss: 0.1000 - rkd_loss: 0.0223 - student_loss: 0.3733 - total_loss: 0.3583
+[1m341/938[0m [32m=======[0m[37m=============[0m [1m3s[0m 6ms/step - accuracy: 0.8195 - distill_loss: 9.7047e-04 - loss: 0.1000 - rkd_loss: 0.0219 - student_loss: 0.3681 - total_loss: 0.3533
+[1m350/938[0m [32m=======[0m[37m=============[0m [1m3s[0m 6ms/step - accuracy: 0.8214 - distill_loss: 9.5892e-04 - loss: 0.1000 - rkd_loss: 0.0216 - student_loss: 0.3637 - total_loss: 0.3490
+[1m359/938[0m [32m=======[0m[37m=============[0m [1m3s[0m 6ms/step - accuracy: 0.8233 - distill_loss: 9.4750e-04 - loss: 0.1000 - rkd_loss: 0.0214 - student_loss: 0.3594 - total_loss: 0.3449
+[1m368/938[0m [32m=======[0m[37m=============[0m [1m3s[0m 6ms/step - accuracy: 0.8251 - distill_loss: 9.3661e-04 - loss: 0.1000 - rkd_loss: 0.0212 - student_loss: 0.3556 - total_loss: 0.3413
+[1m377/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8268 - distill_loss: 9.2700e-04 - loss: 0.1000 - rkd_loss: 0.0210 - student_loss: 0.3528 - total_loss: 0.3386
+[1m386/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8285 - distill_loss: 9.1573e-04 - loss: 0.1000 - rkd_loss: 0.0207 - student_loss: 0.3487 - total_loss: 0.3347
+[1m395/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8301 - distill_loss: 9.0355e-04 - loss: 0.1000 - rkd_loss: 0.0205 - student_loss: 0.3443 - total_loss: 0.3304
+[1m404/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8317 - distill_loss: 8.9355e-04 - loss: 0.1000 - rkd_loss: 0.0202 - student_loss: 0.3404 - total_loss: 0.3267
+[1m413/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8332 - distill_loss: 8.8419e-04 - loss: 0.1000 - rkd_loss: 0.0200 - student_loss: 0.3366 - total_loss: 0.3231
+[1m422/938[0m [32m========[0m[37m============[0m [1m3s[0m 6ms/step - accuracy: 0.8347 - distill_loss: 8.7484e-04 - loss: 0.1000 - rkd_loss: 0.0198 - student_loss: 0.3335 - total_loss: 0.3201
+[1m431/938[0m [32m=========[0m[37m===========[0m [1m3s[0m 6ms/step - accuracy: 0.8361 - distill_loss: 8.6886e-04 - loss: 0.1000 - rkd_loss: 0.0197 - student_loss: 0.3313 - total_loss: 0.3179
+[1m440/938[0m [32m=========[0m[37m===========[0m [1m2s[0m 6ms/step - accuracy: 0.8375 - distill_loss: 8.6032e-04 - loss: 0.1000 - rkd_loss: 0.0195 - student_loss: 0.3281 - total_loss: 0.3149
+[1m449/938[0m [32m=========[0m[37m===========[0m [1m2s[0m 6ms/step - accuracy: 0.8389 - distill_loss: 8.5042e-04 - loss: 0.1000 - rkd_loss: 0.0192 - student_loss: 0.3248 - total_loss: 0.3117
+[1m458/938[0m [32m=========[0m[37m===========[0m [1m2s[0m 6ms/step - accuracy: 0.8402 - distill_loss: 8.4273e-04 - loss: 0.1000 - rkd_loss: 0.0191 - student_loss: 0.3220 - total_loss: 0.3090
+[1m467/938[0m [32m=========[0m[37m===========[0m [1m2s[0m 6ms/step - accuracy: 0.8415 - distill_loss: 8.3505e-04 - loss: 0.1000 - rkd_loss: 0.0189 - student_loss: 0.3199 - total_loss: 0.3069
+[1m476/938[0m [32m==========[0m[37m==========[0m [1m2s[0m 6ms/step - accuracy: 0.8428 - distill_loss: 8.2846e-04 - loss: 0.1000 - rkd_loss: 0.0188 - student_loss: 0.3176 - total_loss: 0.3047
+[1m485/938[0m [32m==========[0m[37m==========[0m [1m2s[0m 6ms/step - accuracy: 0.8440 - distill_loss: 8.2175e-04 - loss: 0.1000 - rkd_loss: 0.0186 - student_loss: 0.3152 - total_loss: 0.3024
+[1m494/938[0m [32m==========[0m[37m==========[0m [1m2s[0m 6ms/step - accuracy: 0.8452 - distill_loss: 8.1510e-04 - loss: 0.1000 - rkd_loss: 0.0185 - student_loss: 0.3128 - total_loss: 0.3000
+[1m503/938[0m [32m==========[0m[37m==========[0m [1m2s[0m 6ms/step - accuracy: 0.8463 - distill_loss: 8.0782e-04 - loss: 0.1000 - rkd_loss: 0.0183 - student_loss: 0.3101 - total_loss: 0.2975
+[1m512/938[0m [32m==========[0m[37m==========[0m [1m2s[0m 6ms/step - accuracy: 0.8474 - distill_loss: 8.0195e-04 - loss: 0.1000 - rkd_loss: 0.0182 - student_loss: 0.3078 - total_loss: 0.2953
+[1m521/938[0m [32m===========[0m[37m=========[0m [1m2s[0m 6ms/step - accuracy: 0.8485 - distill_loss: 7.9551e-04 - loss: 0.1000 - rkd_loss: 0.0180 - student_loss: 0.3055 - total_loss: 0.2931
+[1m530/938[0m [32m===========[0m[37m=========[0m [1m2s[0m 6ms/step - accuracy: 0.8496 - distill_loss: 7.8941e-04 - loss: 0.1000 - rkd_loss: 0.0179 - student_loss: 0.3040 - total_loss: 0.2916
+[1m540/938[0m [32m===========[0m[37m=========[0m [1m2s[0m 6ms/step - accuracy: 0.8507 - distill_loss: 7.8134e-04 - loss: 0.1000 - rkd_loss: 0.0177 - student_loss: 0.3012 - total_loss: 0.2889
+[1m550/938[0m [32m===========[0m[37m=========[0m [1m2s[0m 6ms/step - accuracy: 0.8519 - distill_loss: 7.7511e-04 - loss: 0.1000 - rkd_loss: 0.0176 - student_loss: 0.2990 - total_loss: 0.2867
+[1m559/938[0m [32m===========[0m[37m=========[0m [1m2s[0m 6ms/step - accuracy: 0.8529 - distill_loss: 7.6711e-04 - loss: 0.1000 - rkd_loss: 0.0174 - student_loss: 0.2961 - total_loss: 0.2840
+[1m568/938[0m [32m============[0m[37m========[0m [1m2s[0m 6ms/step - accuracy: 0.8538 - distill_loss: 7.5952e-04 - loss: 0.1000 - rkd_loss: 0.0173 - student_loss: 0.2932 - total_loss: 0.2813
+[1m577/938[0m [32m============[0m[37m========[0m [1m2s[0m 6ms/step - accuracy: 0.8548 - distill_loss: 7.5339e-04 - loss: 0.1000 - rkd_loss: 0.0171 - student_loss: 0.2913 - total_loss: 0.2794
+[1m586/938[0m [32m============[0m[37m========[0m [1m2s[0m 6ms/step - accuracy: 0.8557 - distill_loss: 7.4569e-04 - loss: 0.1000 - rkd_loss: 0.0169 - student_loss: 0.2885 - total_loss: 0.2767
+[1m595/938[0m [32m============[0m[37m========[0m [1m2s[0m 6ms/step - accuracy: 0.8566 - distill_loss: 7.4111e-04 - loss: 0.1000 - rkd_loss: 0.0168 - student_loss: 0.2864 - total_loss: 0.2747
+[1m604/938[0m [32m============[0m[37m========[0m [1m1s[0m 6ms/step - accuracy: 0.8575 - distill_loss: 7.3401e-04 - loss: 0.1000 - rkd_loss: 0.0167 - student_loss: 0.2843 - total_loss: 0.2726
+[1m613/938[0m [32m=============[0m[37m=======[0m [1m1s[0m 6ms/step - accuracy: 0.8584 - distill_loss: 7.2816e-04 - loss: 0.1000 - rkd_loss: 0.0166 - student_loss: 0.2822 - total_loss: 0.2706
+[1m622/938[0m [32m=============[0m[37m=======[0m [1m1s[0m 6ms/step - accuracy: 0.8593 - distill_loss: 7.2211e-04 - loss: 0.1000 - rkd_loss: 0.0164 - student_loss: 0.2801 - total_loss: 0.2686
+[1m631/938[0m [32m=============[0m[37m=======[0m [1m1s[0m 6ms/step - accuracy: 0.8601 - distill_loss: 7.1526e-04 - loss: 0.1000 - rkd_loss: 0.0163 - student_loss: 0.2775 - total_loss: 0.2661
+[1m639/938[0m [32m=============[0m[37m=======[0m [1m1s[0m 6ms/step - accuracy: 0.8609 - distill_loss: 7.1038e-04 - loss: 0.1000 - rkd_loss: 0.0162 - student_loss: 0.2756 - total_loss: 0.2643
+[1m648/938[0m [32m=============[0m[37m=======[0m [1m1s[0m 6ms/step - accuracy: 0.8617 - distill_loss: 7.0701e-04 - loss: 0.1000 - rkd_loss: 0.0161 - student_loss: 0.2742 - total_loss: 0.2629
+[1m657/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8625 - distill_loss: 7.0157e-04 - loss: 0.1000 - rkd_loss: 0.0160 - student_loss: 0.2725 - total_loss: 0.2613
+[1m666/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8633 - distill_loss: 6.9721e-04 - loss: 0.1000 - rkd_loss: 0.0159 - student_loss: 0.2707 - total_loss: 0.2596
+[1m674/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8640 - distill_loss: 6.9461e-04 - loss: 0.1000 - rkd_loss: 0.0158 - student_loss: 0.2699 - total_loss: 0.2587
+[1m682/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8646 - distill_loss: 6.9153e-04 - loss: 0.1000 - rkd_loss: 0.0157 - student_loss: 0.2686 - total_loss: 0.2576
+[1m690/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8653 - distill_loss: 6.8691e-04 - loss: 0.1000 - rkd_loss: 0.0156 - student_loss: 0.2671 - total_loss: 0.2561
+[1m698/938[0m [32m==============[0m[37m======[0m [1m1s[0m 6ms/step - accuracy: 0.8660 - distill_loss: 6.8222e-04 - loss: 0.1000 - rkd_loss: 0.0155 - student_loss: 0.2654 - total_loss: 0.2544
+[1m706/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8666 - distill_loss: 6.7835e-04 - loss: 0.1000 - rkd_loss: 0.0154 - student_loss: 0.2642 - total_loss: 0.2533
+[1m715/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8673 - distill_loss: 6.7432e-04 - loss: 0.1000 - rkd_loss: 0.0154 - student_loss: 0.2628 - total_loss: 0.2520
+[1m723/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8679 - distill_loss: 6.7074e-04 - loss: 0.1000 - rkd_loss: 0.0153 - student_loss: 0.2614 - total_loss: 0.2506
+[1m732/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8686 - distill_loss: 6.6562e-04 - loss: 0.1000 - rkd_loss: 0.0152 - student_loss: 0.2592 - total_loss: 0.2485
+[1m741/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8693 - distill_loss: 6.6117e-04 - loss: 0.1000 - rkd_loss: 0.0151 - student_loss: 0.2574 - total_loss: 0.2468
+[1m750/938[0m [32m===============[0m[37m=====[0m [1m1s[0m 6ms/step - accuracy: 0.8700 - distill_loss: 6.5650e-04 - loss: 0.1000 - rkd_loss: 0.0150 - student_loss: 0.2558 - total_loss: 0.2452
+[1m759/938[0m [32m================[0m[37m====[0m [1m1s[0m 6ms/step - accuracy: 0.8706 - distill_loss: 6.5332e-04 - loss: 0.1000 - rkd_loss: 0.0149 - student_loss: 0.2546 - total_loss: 0.2440
+[1m768/938[0m [32m================[0m[37m====[0m [1m1s[0m 6ms/step - accuracy: 0.8713 - distill_loss: 6.5008e-04 - loss: 0.1000 - rkd_loss: 0.0148 - student_loss: 0.2536 - total_loss: 0.2431
+[1m777/938[0m [32m================[0m[37m====[0m [1m0s[0m 6ms/step - accuracy: 0.8719 - distill_loss: 6.4630e-04 - loss: 0.1000 - rkd_loss: 0.0147 - student_loss: 0.2521 - total_loss: 0.2417
+[1m786/938[0m [32m================[0m[37m====[0m [1m0s[0m 6ms/step - accuracy: 0.8725 - distill_loss: 6.4308e-04 - loss: 0.1000 - rkd_loss: 0.0147 - student_loss: 0.2507 - total_loss: 0.2403
+[1m795/938[0m [32m================[0m[37m====[0m [1m0s[0m 6ms/step - accuracy: 0.8731 - distill_loss: 6.3922e-04 - loss: 0.1000 - rkd_loss: 0.0146 - student_loss: 0.2493 - total_loss: 0.2390
+[1m804/938[0m [32m=================[0m[37m===[0m [1m0s[0m 6ms/step - accuracy: 0.8738 - distill_loss: 6.3585e-04 - loss: 0.1000 - rkd_loss: 0.0145 - student_loss: 0.2481 - total_loss: 0.2378
+[1m813/938[0m [32m=================[0m[37m===[0m [1m0s[0m 6ms/step - accuracy: 0.8743 - distill_loss: 6.3299e-04 - loss: 0.1000 - rkd_loss: 0.0144 - student_loss: 0.2472 - total_loss: 0.2370
+[1m822/938[0m [32m=================[0m[37m===[0m [1m0s[0m 6ms/step - accuracy: 0.8749 - distill_loss: 6.2955e-04 - loss: 0.1000 - rkd_loss: 0.0144 - student_loss: 0.2459 - total_loss: 0.2357
+[1m831/938[0m [32m=================[0m[37m===[0m [1m0s[0m 6ms/step - accuracy: 0.8755 - distill_loss: 6.2565e-04 - loss: 0.1000 - rkd_loss: 0.0143 - student_loss: 0.2444 - total_loss: 0.2343
+[1m840/938[0m [32m=================[0m[37m===[0m [1m0s[0m 6ms/step - accuracy: 0.8761 - distill_loss: 6.2249e-04 - loss: 0.1000 - rkd_loss: 0.0142 - student_loss: 0.2432 - total_loss: 0.2332
+[1m849/938[0m [32m==================[0m[37m==[0m [1m0s[0m 6ms/step - accuracy: 0.8766 - distill_loss: 6.1931e-04 - loss: 0.1000 - rkd_loss: 0.0141 - student_loss: 0.2422 - total_loss: 0.2321
+[1m858/938[0m [32m==================[0m[37m==[0m [1m0s[0m 6ms/step - accuracy: 0.8772 - distill_loss: 6.1576e-04 - loss: 0.1000 - rkd_loss: 0.0141 - student_loss: 0.2410 - total_loss: 0.2310
+[1m867/938[0m [32m==================[0m[37m==[0m [1m0s[0m 6ms/step - accuracy: 0.8777 - distill_loss: 6.1230e-04 - loss: 0.1000 - rkd_loss: 0.0140 - student_loss: 0.2398 - total_loss: 0.2298
+[1m876/938[0m [32m==================[0m[37m==[0m [1m0s[0m 6ms/step - accuracy: 0.8783 - distill_loss: 6.0902e-04 - loss: 0.1000 - rkd_loss: 0.0139 - student_loss: 0.2387 - total_loss: 0.2288
+[1m884/938[0m [32m==================[0m[37m==[0m [1m0s[0m 6ms/step - accuracy: 0.8787 - distill_loss: 6.0572e-04 - loss: 0.1000 - rkd_loss: 0.0138 - student_loss: 0.2375 - total_loss: 0.2277
+[1m893/938[0m [32m===================[0m[37m=[0m [1m0s[0m 6ms/step - accuracy: 0.8793 - distill_loss: 6.0216e-04 - loss: 0.1000 - rkd_loss: 0.0138 - student_loss: 0.2365 - total_loss: 0.2267
+[1m902/938[0m [32m===================[0m[37m=[0m [1m0s[0m 6ms/step - accuracy: 0.8798 - distill_loss: 6.0002e-04 - loss: 0.1000 - rkd_loss: 0.0137 - student_loss: 0.2356 - total_loss: 0.2258
+[1m911/938[0m [32m===================[0m[37m=[0m [1m0s[0m 6ms/step - accuracy: 0.8803 - distill_loss: 5.9759e-04 - loss: 0.1000 - rkd_loss: 0.0137 - student_loss: 0.2349 - total_loss: 0.2251
+[1m920/938[0m [32m===================[0m[37m=[0m [1m0s[0m 6ms/step - accuracy: 0.8808 - distill_loss: 5.9427e-04 - loss: 0.1000 - rkd_loss: 0.0136 - student_loss: 0.2338 - total_loss: 0.2241
+[1m929/938[0m [32m===================[0m[37m=[0m [1m0s[0m 6ms/step - accuracy: 0.8813 - distill_loss: 5.9159e-04 - loss: 0.1000 - rkd_loss: 0.0135 - student_loss: 0.2329 - total_loss: 0.2232
+[1m938/938[0m [32m====================[0m[37m[0m [1m0s[0m 6ms/step - accuracy: 0.8818 - distill_loss: 5.8920e-04 - loss: 0.1000 - rkd_loss: 0.0135 - student_loss: 0.2320 - total_loss: 0.2224
+[1m938/938[0m [32m====================[0m[37m[0m [1m8s[0m 6ms/step - accuracy: 0.8818 - distill_loss: 5.8930e-04 - loss: 0.1000 - rkd_loss: 0.0135 - student_loss: 0.2320 - total_loss: 0.2223
+WARNING:tensorflow:From C:\Python311\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+WARNING:tensorflow:From C:\Python311\Lib\site-packages\keras\src\backend\common\global_state.py:82: The name tf.reset_default_graph is deprecated. Please use tf.compat.v1.reset_default_graph instead.
+
+  > Distillation Time: 8.21s
+
+=== Starting Optimization Pipeline ===
+--- Phase 1: Pruning ---
+--- [Pruning Engine] Accuracy-Driven + Hybrid Weight Logic ---
+  Initial Accuracy: 0.9669
+
+--- PHASE 1: GREEDY SWEEP (Improver Hunt) ---
+  Scanning active neurons...    > dense_0 [0/256]
+    > dense_0 [20/256]
+    > dense_0 [40/256]
+    > dense_0 [60/256]
+    > dense_0 [80/256]
+    > dense_0 [100/256]
+    > dense_0 [120/256]
+    > dense_0 [140/256]
+    > dense_0 [160/256]
+    > dense_0 [180/256]
+    > dense_0 [200/256]
+    > dense_0 [220/256]
+    > dense_0 [240/256]
+    > dense_1 [0/128]
+    > dense_1 [20/128]
+    > dense_1 [40/128]
+    > dense_1 [60/128]
+    > dense_1 [80/128]
+    > dense_1 [100/128]
+    > dense_1 [120/128]
+    > output [0/10]
+
+  Scanning Done.
+  Found 75 improvers. Attempting Batch Prune...
+    > Batch Crash (12.67%). Halving...
+    > Batch Crash (5.43%). Halving...
+    > Batch Crash (2.20%). Halving...
+    > Pruned batch of 9. Peak: 0.9669 (Sparsity: 2.3%)
+  Scanning active neurons...    > dense_0 [0/250]
+    > dense_0 [20/250]
+    > dense_0 [40/250]
+    > dense_0 [60/250]
+    > dense_0 [80/250]
+    > dense_0 [100/250]
+    > dense_0 [120/250]
+    > dense_0 [140/250]
+    > dense_0 [160/250]
+    > dense_0 [180/250]
+    > dense_0 [200/250]
+    > dense_0 [220/250]
+    > dense_0 [240/250]
+    > dense_1 [0/125]
+    > dense_1 [20/125]
+    > dense_1 [40/125]
+    > dense_1 [60/125]
+    > dense_1 [80/125]
+    > dense_1 [100/125]
+    > dense_1 [120/125]
+    > output [0/10]
+
+  Scanning Done.
+  No improvers found. Limit: 0.9669
+
+--- PHASE 2: DYNAMIC HEURISTIC (Sensitive 0.2% or Total > 1.3%) ---
+  Step 3: Pruned 1. Acc: 0.9746 Base: 0.9746 (Sparsity: 2.4%)
+  Step 4: Pruned 1. Acc: 0.9764 Base: 0.9764 (Sparsity: 2.8%)
+  Step 5: Pruned 1. Acc: 0.9763 Base: 0.9764 (Sparsity: 3.1%)
+  Step 6: Pruned 1. Acc: 0.9770 Base: 0.9770 (Sparsity: 3.2%)
+  Step 7: Pruned 1. Acc: 0.9775 Base: 0.9775 (Sparsity: 3.3%)
+  Step 8: Pruned 1. Acc: 0.9778 Base: 0.9778 (Sparsity: 3.4%)
+  Step 9: Pruned 1. Acc: 0.9783 Base: 0.9783 (Sparsity: 3.5%)
+  Step 10: Pruned 1. Acc: 0.9788 Base: 0.9788 (Sparsity: 3.9%)
+  Step 11: Pruned 1. Acc: 0.9787 Base: 0.9788 (Sparsity: 4.0%)
+  Step 12: Pruned 1. Acc: 0.9791 Base: 0.9791 (Sparsity: 4.1%)
+  Step 13: Pruned 1. Acc: 0.9794 Base: 0.9794 (Sparsity: 4.2%)
+  Step 14: Pruned 1. Acc: 0.9793 Base: 0.9794 (Sparsity: 4.5%)
+  Step 15: Pruned 1. Acc: 0.9798 Base: 0.9798 (Sparsity: 4.9%)
+  Step 16: Pruned 1. Acc: 0.9798 Base: 0.9798 (Sparsity: 5.0%)
+  Step 17: Pruned 1. Acc: 0.9796 Base: 0.9798 (Sparsity: 5.1%)
+  Step 18: Pruned 1. Acc: 0.9801 Base: 0.9801 (Sparsity: 5.2%)
+  Step 19: Pruned 1. Acc: 0.9802 Base: 0.9802 (Sparsity: 5.3%)
+  Step 20: Pruned 1. Acc: 0.9799 Base: 0.9802 (Sparsity: 5.6%)
+  Step 21: Pruned 1. Acc: 0.9797 Base: 0.9802 (Sparsity: 5.8%)
+  Step 22: Pruned 1. Acc: 0.9792 Base: 0.9802 (Sparsity: 5.9%)
+  Step 23: Pruned 1. Acc: 0.9794 Base: 0.9802 (Sparsity: 6.0%)
+  Step 24: Pruned 1. Acc: 0.9797 Base: 0.9802 (Sparsity: 6.3%)
+  Step 25: Pruned 1. Acc: 0.9801 Base: 0.9802 (Sparsity: 6.4%)
+  Step 26: Pruned 1. Acc: 0.9800 Base: 0.9802 (Sparsity: 6.7%)
+  Step 27: Pruned 1. Acc: 0.9801 Base: 0.9802 (Sparsity: 7.1%)
+  Step 28: Pruned 1. Acc: 0.9800 Base: 0.9802 (Sparsity: 7.4%)
+  Step 29: Pruned 1. Acc: 0.9804 Base: 0.9804 (Sparsity: 7.7%)
+  Step 30: Pruned 1. Acc: 0.9803 Base: 0.9804 (Sparsity: 7.9%)
+  Step 31: Pruned 1. Acc: 0.9803 Base: 0.9804 (Sparsity: 8.0%)
+  Step 32: Pruned 1. Acc: 0.9807 Base: 0.9807 (Sparsity: 8.3%)
+  Step 33: Pruned 1. Acc: 0.9803 Base: 0.9807 (Sparsity: 8.6%)
+  Step 34: Pruned 1. Acc: 0.9805 Base: 0.9807 (Sparsity: 9.0%)
+  Step 35: Pruned 1. Acc: 0.9806 Base: 0.9807 (Sparsity: 9.3%)
+  Step 36: Pruned 1. Acc: 0.9804 Base: 0.9807 (Sparsity: 9.4%)
+  Step 37: Pruned 1. Acc: 0.9806 Base: 0.9807 (Sparsity: 9.7%)
+  Step 38: Pruned 1. Acc: 0.9803 Base: 0.9807 (Sparsity: 9.9%)
+  Step 39: Pruned 1. Acc: 0.9802 Base: 0.9807 (Sparsity: 10.2%)
+  Step 40: Pruned 1. Acc: 0.9808 Base: 0.9808 (Sparsity: 10.5%)
+  Step 41: Pruned 1. Acc: 0.9801 Base: 0.9808 (Sparsity: 10.9%)
+  Step 42: Pruned 1. Acc: 0.9805 Base: 0.9808 (Sparsity: 11.2%)
+  Step 43: Pruned 1. Acc: 0.9805 Base: 0.9808 (Sparsity: 11.5%)
+  Step 44: Pruned 1. Acc: 0.9806 Base: 0.9808 (Sparsity: 11.6%)
+  Step 45: Pruned 1. Acc: 0.9823 Base: 0.9823 (Sparsity: 11.7%)
+  Step 46: Pruned 1. Acc: 0.9823 Base: 0.9823 (Sparsity: 11.9%)
+  Step 47: Pruned 1. Acc: 0.9826 Base: 0.9826 (Sparsity: 12.2%)
+  Step 48: Pruned 1. Acc: 0.9824 Base: 0.9826 (Sparsity: 12.5%)
+  Step 49: Pruned 1. Acc: 0.9824 Base: 0.9826 (Sparsity: 12.9%)
+  Step 50: Pruned 1. Acc: 0.9818 Base: 0.9826 (Sparsity: 13.0%)
+  Step 51: Pruned 1. Acc: 0.9824 Base: 0.9826 (Sparsity: 13.3%)
+  Step 52: Pruned 1. Acc: 0.9825 Base: 0.9826 (Sparsity: 13.6%)
+  Step 53: Pruned 1. Acc: 0.9823 Base: 0.9826 (Sparsity: 14.0%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 0 new + 0 existing. Pruned 1 innocent.
+  Step 55: Pruned 1. Acc: 0.9820 Base: 0.9826 (Sparsity: 14.4%)
+  Step 56: Pruned 1. Acc: 0.9822 Base: 0.9826 (Sparsity: 14.7%)
+  Step 57: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 15.1%)
+  Step 58: Pruned 1. Acc: 0.9816 Base: 0.9826 (Sparsity: 15.2%)
+  Step 59: Pruned 1. Acc: 0.9818 Base: 0.9826 (Sparsity: 15.5%)
+  Step 60: Pruned 1. Acc: 0.9820 Base: 0.9826 (Sparsity: 15.9%)
+  Step 61: Pruned 1. Acc: 0.9816 Base: 0.9826 (Sparsity: 16.2%)
+  Step 62: Pruned 1. Acc: 0.9815 Base: 0.9826 (Sparsity: 16.5%)
+  Step 63: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 16.9%)
+  Step 64: Pruned 1. Acc: 0.9817 Base: 0.9826 (Sparsity: 17.2%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 1 existing. Pruned 0 innocent.
+  Step 66: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 17.5%)
+  Step 67: Pruned 1. Acc: 0.9818 Base: 0.9826 (Sparsity: 17.6%)
+  Step 68: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 18.0%)
+  Step 69: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 18.1%)
+  Step 70: Pruned 1. Acc: 0.9819 Base: 0.9826 (Sparsity: 18.2%)
+  Step 71: Pruned 1. Acc: 0.9819 Base: 0.9826 (Sparsity: 18.3%)
+  Step 72: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 18.6%)
+  Step 73: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 18.7%)
+  Step 74: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 19.1%)
+  Step 75: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 19.2%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 0 new + 1 existing. Pruned 1 innocent.
+  Step 77: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 19.8%)
+  Step 78: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 20.2%)
+  Step 79: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 20.5%)
+  Step 80: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 20.6%)
+  Step 81: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 20.7%)
+  Step 82: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 20.8%)
+  Step 83: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 21.2%)
+  Step 84: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 21.5%)
+  Step 85: Pruned 1. Acc: 0.9821 Base: 0.9826 (Sparsity: 21.8%)
+  Step 86: Pruned 1. Acc: 0.9816 Base: 0.9826 (Sparsity: 22.2%)
+  Step 87: Pruned 1. Acc: 0.9821 Base: 0.9826 (Sparsity: 22.5%)
+  Step 88: Pruned 1. Acc: 0.9821 Base: 0.9826 (Sparsity: 22.8%)
+  Step 89: Pruned 1. Acc: 0.9824 Base: 0.9826 (Sparsity: 23.0%)
+  Step 90: Pruned 1. Acc: 0.9817 Base: 0.9826 (Sparsity: 23.3%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 1 existing. Pruned 0 innocent.
+  Step 92: Pruned 1. Acc: 0.9820 Base: 0.9826 (Sparsity: 23.4%)
+  Step 93: Pruned 1. Acc: 0.9817 Base: 0.9826 (Sparsity: 23.7%)
+  Step 94: Pruned 1. Acc: 0.9817 Base: 0.9826 (Sparsity: 24.1%)
+  Step 95: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 24.4%)
+  Step 96: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 24.7%)
+  Step 97: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 25.1%)
+  Step 98: Pruned 1. Acc: 0.9819 Base: 0.9826 (Sparsity: 25.4%)
+  Step 99: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 25.7%)
+  Step 100: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 26.1%)
+  Step 101: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 26.2%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 0 new + 1 existing. Pruned 1 innocent.
+  Step 103: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 26.6%)
+  Step 104: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 27.0%)
+  Step 105: Pruned 1. Acc: 0.9814 Base: 0.9826 (Sparsity: 27.3%)
+  Step 106: Pruned 1. Acc: 0.9819 Base: 0.9826 (Sparsity: 27.6%)
+  Step 107: Pruned 1. Acc: 0.9817 Base: 0.9826 (Sparsity: 28.0%)
+  Step 108: Pruned 1. Acc: 0.9815 Base: 0.9826 (Sparsity: 28.1%)
+  Step 109: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 28.4%)
+  Step 110: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 28.5%)
+  Step 111: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 28.6%)
+  Step 112: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 29.0%)
+  Step 113: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 29.3%)
+  Step 114: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 29.6%)
+  Step 115: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 30.0%)
+  Step 116: Pruned 1. Acc: 0.9814 Base: 0.9826 (Sparsity: 30.3%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 1 existing. Pruned 0 innocent.
+  Step 118: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 30.6%)
+  Step 119: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 31.0%)
+  Step 120: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 31.3%)
+  Step 121: Pruned 1. Acc: 0.9815 Base: 0.9826 (Sparsity: 31.4%)
+  Step 122: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 31.7%)
+  Step 123: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 32.1%)
+  Step 124: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 32.4%)
+  Step 125: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 32.5%)
+  Step 126: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 32.8%)
+  Step 127: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 33.2%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 2 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 3 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 4 existing. Pruned 0 innocent.
+  Step 131: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 33.3%)
+  Step 132: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 33.6%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 5 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 6 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 7 existing. Pruned 0 innocent.
+  Step 136: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 33.7%)
+  Step 137: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 34.1%)
+  Step 138: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 34.4%)
+  Step 139: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 34.7%)
+  Step 140: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 34.8%)
+  Step 141: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 35.0%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 8 existing. Pruned 0 innocent.
+  Step 143: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 35.3%)
+  Step 144: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 35.6%)
+  Step 145: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 36.0%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 9 existing. Pruned 0 innocent.
+  Step 147: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 36.1%)
+  Step 148: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 36.4%)
+  Step 149: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 36.7%)
+  Step 150: Pruned 1. Acc: 0.9802 Base: 0.9826 (Sparsity: 37.1%)
+  Step 151: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 37.4%)
+  Step 152: Pruned 1. Acc: 0.9812 Base: 0.9826 (Sparsity: 37.7%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 10 existing. Pruned 0 innocent.
+  Step 154: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 38.1%)
+  Step 155: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 38.4%)
+  Step 156: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 38.7%)
+  Step 157: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 38.8%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 11 existing. Pruned 0 innocent.
+  Step 159: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 39.0%)
+  Step 160: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 39.3%)
+  Step 161: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 39.4%)
+  Step 162: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 39.7%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 12 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 13 existing. Pruned 0 innocent.
+  Step 165: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 40.1%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 14 existing. Pruned 0 innocent.
+  Step 167: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 40.4%)
+  Step 168: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 40.7%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 15 existing. Pruned 0 innocent.
+  Step 170: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 40.8%)
+  Step 171: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 41.2%)
+  Step 172: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 41.3%)
+  Step 173: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 41.6%)
+  Step 174: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 41.7%)
+  Step 175: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 42.1%)
+  Step 176: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 42.4%)
+  Step 177: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 42.5%)
+  Step 178: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 42.8%)
+  Step 179: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 42.9%)
+  Step 180: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 43.3%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 16 existing. Pruned 0 innocent.
+  Step 182: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 43.6%)
+  Step 183: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 43.9%)
+  Step 184: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 44.3%)
+  Step 185: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 44.6%)
+  Step 186: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 44.9%)
+  Step 187: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 45.3%)
+  Step 188: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 45.4%)
+  Step 189: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 45.5%)
+  Step 190: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 45.8%)
+  Step 191: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 46.2%)
+  Step 192: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 46.5%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 17 existing. Pruned 0 innocent.
+  Step 194: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 46.8%)
+  Step 195: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 46.9%)
+  Step 196: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 47.3%)
+  Step 197: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 47.4%)
+  Step 198: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 47.7%)
+  Step 199: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 48.1%)
+  Step 200: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 48.4%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 18 existing. Pruned 0 innocent.
+  Step 202: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 48.5%)
+  Step 203: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 48.8%)
+  Step 204: Pruned 1. Acc: 0.9811 Base: 0.9826 (Sparsity: 48.9%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 19 existing. Pruned 0 innocent.
+  Step 206: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 49.3%)
+  Step 207: Pruned 1. Acc: 0.9801 Base: 0.9826 (Sparsity: 49.4%)
+  Step 208: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 49.7%)
+  Step 209: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 49.8%)
+  Step 210: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 49.9%)
+  Step 211: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 50.0%)
+  Step 212: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 50.4%)
+  Step 213: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 50.7%)
+  Step 214: Pruned 1. Acc: 0.9806 Base: 0.9826 (Sparsity: 51.0%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 20 existing. Pruned 0 innocent.
+  Step 216: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 51.2%)
+  Step 217: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 51.5%)
+  Step 218: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 51.8%)
+  Step 219: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 52.2%)
+  Step 220: Pruned 1. Acc: 0.9813 Base: 0.9826 (Sparsity: 52.5%)
+  Step 221: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 52.6%)
+  Step 222: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 52.9%)
+  Step 223: Pruned 1. Acc: 0.9807 Base: 0.9826 (Sparsity: 53.3%)
+  Step 224: Pruned 1. Acc: 0.9815 Base: 0.9826 (Sparsity: 53.6%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 21 existing. Pruned 0 innocent.
+  Step 226: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 53.9%)
+  Step 227: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 54.3%)
+  Step 228: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 54.4%)
+  Step 229: Pruned 1. Acc: 0.9805 Base: 0.9826 (Sparsity: 54.5%)
+  Step 230: Pruned 1. Acc: 0.9808 Base: 0.9826 (Sparsity: 54.8%)
+  Step 231: Pruned 1. Acc: 0.9810 Base: 0.9826 (Sparsity: 55.2%)
+  Step 232: Pruned 1. Acc: 0.9803 Base: 0.9826 (Sparsity: 55.5%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 22 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 23 existing. Pruned 0 innocent.
+  Step 235: Pruned 1. Acc: 0.9809 Base: 0.9826 (Sparsity: 55.6%)
+  Step 236: Pruned 1. Acc: 0.9804 Base: 0.9826 (Sparsity: 55.9%)
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 24 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 25 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 26 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 27 existing. Pruned 0 innocent.
+    > Safety Check Failed. Analyzing victims for guilty neurons...
+    > Recovery: Protected 1 new + 28 existing. Pruned 0 innocent.
+  > Resistance Detected (Active Prot: 28). Switching to Weights.
+
+--- PHASE 3: WEIGHT PRUNING ---
+  > Starting Adaptive Sweep (Factor 2.0 -> 0.3)...
+    - Factor 2.0: Too Aggressive (Drop 38.49%). Reverting.
+    - Factor 1.8: Too Aggressive (Drop 23.39%). Reverting.
+    - Factor 1.6: Too Aggressive (Drop 11.60%). Reverting.
+    - Factor 1.4: Too Aggressive (Drop 6.15%). Reverting.
+    - Factor 1.2: Too Aggressive (Drop 2.75%). Reverting.
+    - Factor 1.0: Success! (Acc 0.9739). Rejecting and applying buffer (Factor - 0.2).
+    > Applying Safer Factor 0.8...
+  > Sweep Complete. Acc: 0.9773 Base: 0.9826 (Sparsity: 78.7%)
+  > Starting Iterative Weight Pruning (Batch: Max(4%, 3000))...
+  Step 243: Pruned weight batch. Acc: 0.9794 Base: 0.9826 (Sparsity: 80.0%)
+  Step 244: Pruned weight batch. Acc: 0.9786 Base: 0.9826 (Sparsity: 81.2%)
+  Step 245: Pruned weight batch. Acc: 0.9773 Base: 0.9826 (Sparsity: 82.5%)
+  Step 246: Pruned weight batch. Acc: 0.9766 Base: 0.9826 (Sparsity: 83.8%)
+  Step 247: Pruned weight batch. Acc: 0.9772 Base: 0.9826 (Sparsity: 85.1%)
+  Step 248: Pruned weight batch. Acc: 0.9730 Base: 0.9826 (Sparsity: 86.4%)
+  Step 249: Pruned weight batch. Acc: 0.9699 Base: 0.9826 (Sparsity: 87.6%)
+  Step 250: Pruned weight batch. Acc: 0.9675 Base: 0.9826 (Sparsity: 88.9%)
+  Step 251: Pruned weight batch. Acc: 0.9673 Base: 0.9826 (Sparsity: 90.2%)
+  !!! Limit Hit: Total Drift 2.65% > 2.0%. Stopping.
+--- Phase 2: Quantization ---
+
+[Quantization] Sensitivity Analysis (Mode: power_of_2)...
+  Baseline Accuracy: 0.9673
+  dense_0: 0.9618 (Drop: 0.0055)
+  dense_1: 0.9676 (Drop: -0.0003)
+  output: 0.9628 (Drop: 0.0045)
+
+[Quantization] Applying power_of_2 Quantization (Threshold: 0.9000)
+  + Post-Processing: Snapping range [127/128, 129/128] -> 1.0
+--- Phase 3: Intermediate Representation (IR) ---
+--- [IR] Exploding Model into Atomic Operations ---
+--- [IR] Explosion Complete. Total Nodes: 4 ---
+--- Phase 4: Graph Optimization ---
+--- [Optimizer] Running Graph Passes ---
+  > [DCE] Removed 0 dead nodes.
+  > [CSE] Merged 0 redundant operations.
+  [Debug: Linear Collapse] Scanning 4 nodes...
+    ? dense_0 -> dense_1: Parent activation is 'relu'.
+    ? dense_1 -> output: Parent activation is 'relu'.
+    - output: Skip collapse. Outputs count is 0 (expected 1).
+  > [Linear Collapse] Merged 0 linear chains.
+  > [Algebraic Simplification] Scanned for identity ops.
+  [Debug: Fusion] Starting pass. OpTypes detected: {'Dense', 'Input'}
+    - output (Dense): Cannot fuse. Output branches to: []
+  > [Operator Fusion] Fused 0 operations.
+  > [DCE] Removed 0 dead nodes.
+--- Phase 5: Code Generation (model_mnist_ours.cpp) ---
+--- [Compiler] Generating C++ Code to model_mnist_ours.cpp ---
+  > Code Generation Complete. (23836 lines)
+
+>>> Final Evaluation
+
+==================================================
+    FINAL PERFORMANCE EVALUATION REPORT
+==================================================
+
+[1] ACCURACY METRICS
+  Original Model:   98.27%
+  Optimized Model:  95.65%
+  Accuracy Drop:    2.62%  [WARNING]
+
+[2] SPARSITY METRICS
+  Total Params:      235,146
+  Active Params:     23,199
+  Global Sparsity:  90.13%
+
+[3] COMPUTATIONAL COST (Approx. FLOPs)
+  Dense FLOPs:       469,504
+  Sparse FLOPs:      46,440
+  Theoretical Speedup: 10.11x
+
+[4] PYTHON INFERENCE LATENCY (Batch 32)
+  Original:          7.19 ms
+  Optimized:         6.35 ms
+  (Note: Real speedup will be higher in generated C++)
+
+[5] LAYER-WISE BREAKDOWN
+  Layer Name           | Shape           | Sparsity   | Unique Vals
+-----------------------------------------------------------------
+  dense_0              | (784, 256)      | 91.9%      | 8
+  dense_1              | (256, 128)      | 81.6%      | 8
+  output               | (128, 10)       | 45.5%      | 8
+
+==================================================
+OVERALL VERDICT: NEEDS TUNING [WARNING]
+==================================================
+
+
+[STATUS] PASS (Code: 0)
+
+
+============================================================
+TEST: MLP | Baseline
+TIME: 2026-01-19 16:05:20.381286
+CMD: C:\Python311\python.exe main.py --dataset mnist --model_type mlp --epochs 1
+============================================================
+2026-01-19 16:05:21.246791: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-01-19 16:05:25.034575: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.

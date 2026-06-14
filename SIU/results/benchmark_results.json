@@ -1,0 +1,11 @@
+{
+  "tflite_benchmark": {
+    "python_baseline_ms": 834.0405,
+    "tflite_ms": 365.031,
+    "cpp_compiler_ms": 0.0,
+    "tflite_speedup": 2.28,
+    "cpp_speedup": 834040536880.49,
+    "batch_size": 32,
+    "iterations": 50
+  }
+}
